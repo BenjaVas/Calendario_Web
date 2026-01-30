@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendario de Proyectos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h1>📅 Proyectos</h1>
+
+<!-- ================= CALENDARIO ================= -->
+<h2 class="section-title">📆 Calendario</h2>
+<div class="calendar-wrapper">
+    <div class="calendar-nav">
+        <button onclick="prevMonth()">⬅️</button>
+        <span id="calendar-title"></span>
+        <button onclick="nextMonth()">➡️</button>
+    </div>
+    <div class="calendar-container">
+        <div id="calendar1" class="calendar"></div>
+        <div id="calendar2" class="calendar"></div>
+    </div>
+</div>
+
+<script>
+    const proyectos = {{ proyectos | tojson }};
+</script>
+<script src="{{ url_for('static', filename='calendar.js') }}"></script>
+
+<hr>
+
+<!-- ================= CREAR PROYECTO ================= -->
+<h2>➕ Nuevo proyecto</h2>
+
+<form method="POST" action="/crear_proyecto">
+    <input type="text" name="nombre" placeholder="Nombre del proyecto" required>
+
+    <label>Inicio</label>
+    <input type="date" name="inicio" required>
+
+    <label>Fin</label>
+    <input type="date" name="fin" required>
+
+    <input type="color" name="color" value="#4D96FF">
+
+    <button type="submit">Crear proyecto</button>
+</form>
+
+<hr>
+
+<!-- ================= LISTA DE PROYECTOS ================= -->
+<h2>📋 Proyectos y tareas</h2>
+
+<ul>
+{% for p in proyectos %}
+    <li style="color: {{ p.color }}"
+        data-proyecto-id="{{ p.id }}"
+        data-inicio="{{ p.inicio }}"
+        data-fin="{{ p.fin }}">
+
+        <strong>{{ p.nombre }}</strong>
+        ({{ p.inicio }} → {{ p.fin }})
+
+        <!-- EDITAR / ELIMINAR PROYECTO -->
+        <a href="{{ url_for('editar_proyecto', proyecto_id=p.id) }}">✏️ Editar</a>
+
+        <form method="POST"
+              action="{{ url_for('eliminar_proyecto', proyecto_id=p.id) }}"
+              style="display:inline"
+              onsubmit="return confirm('¿Eliminar este proyecto y todas sus tareas?');">
+            <button type="submit">🗑️ Eliminar</button>
+        </form>
+
+        <!-- TAREAS -->
+        <ul>
+        {% for t in tareas %}
+            {% if t.proyecto_id == p.id %}
+               <li>
+                    📝 {{ t.nombre }} ({{ t.inicio }} → {{ t.fin }})
+
+                    <a href="{{ url_for('editar_tarea', tarea_id=t.id) }}"
+                    class="btn btn-edit">
+                        ✏️ Editar
+                    </a>
+
+                    <form method="POST"
+                        action="{{ url_for('eliminar_tarea', tarea_id=t.id) }}"
+                        class="inline-form">
+                        <button type="submit"
+                                class="btn btn-delete"
+                                onclick="return confirm('¿Eliminar esta tarea?')">
+                            🗑️ Eliminar
+                        </button>
+                    </form>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+
+    </li>
+{% else %}
+    <li>No hay proyectos aún</li>
+{% endfor %}
+</ul>
+
+<!-- ================= CREAR TAREA ================= -->
+<h2>📝 Nueva tarea</h2>
+
+<form method="POST" action="/crear_tarea">
+    <input type="text" name="nombre" placeholder="Nombre de la tarea" required>
+
+    <label>Inicio</label>
+    <input type="date" name="inicio" required>
+
+    <label>Fin</label>
+    <input type="date" name="fin" required>
+
+    <label>Proyecto</label>
+    <select name="proyecto_id" required>
+        {% for p in proyectos %}
+            <option value="{{ p.id }}">{{ p.nombre }}</option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Crear tarea</button>
+</form>
+
+</body>
+</html>
